@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menú de Almuerzos 💕</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=Satisfy&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fdf6ee;
+      --ink: #1a1208;
+      --gold: #c9882a;
+      --gold-light: #f0c97a;
+      --cream: #f5e9d3;
+      --done-bg: #e8f5e2;
+      --done-border: #6aad52;
+      --done-text: #3a7a25;
+      --card-bg: #fffdf9;
+      --shadow: rgba(90,50,0,0.10);
+      --rose: #e8537a;
+      --rose-light: #fce8ef;
+      --rose-dark: #b03058;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      padding-bottom: 100px;
+      color: var(--ink);
+    }
+
+    /* ── FAB FLOTANTE ── */
+    .fab {
+      position: fixed;
+      bottom: 28px; right: 24px;
+      z-index: 100;
+      width: 62px; height: 62px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f07098, #e8537a);
+      border: none; cursor: pointer;
+      box-shadow: 0 6px 22px rgba(180,60,100,0.38), 0 2px 6px rgba(180,60,100,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.7rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: fabPulse 2.2s ease-in-out infinite;
+    }
+    @keyframes fabPulse {
+      0%,100% { box-shadow: 0 6px 22px rgba(180,60,100,0.38), 0 0 0 0 rgba(232,83,122,0.35); }
+      50%      { box-shadow: 0 6px 22px rgba(180,60,100,0.38), 0 0 0 12px rgba(232,83,122,0); }
+    }
+    .fab:hover { transform: scale(1.1) translateY(-2px); box-shadow: 0 10px 28px rgba(180,60,100,0.45); }
+    .fab:active { transform: scale(0.95); }
+
+    .fab-label {
+      position: fixed;
+      bottom: 38px; right: 94px;
+      z-index: 100;
+      background: var(--ink);
+      color: #fff;
+      font-size: 0.76rem; font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateX(6px);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    .fab:hover ~ .fab-label,
+    .fab-label.show { opacity: 1; transform: translateX(0); }
+
+    /* ── OVERLAY MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(20,8,4,0.55);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal-box {
+      background: linear-gradient(160deg, #fff8fb, #fff0f5);
+      border: 2px solid #f5c6d8;
+      border-radius: 24px;
+      padding: 32px 28px 24px;
+      max-width: 360px; width: 100%;
+      box-shadow: 0 20px 60px rgba(180,60,100,0.22);
+      position: relative;
+      transform: scale(0.85) translateY(30px);
+      transition: transform 0.38s cubic-bezier(.34,1.56,.64,1);
+    }
+    .modal-overlay.open .modal-box { transform: scale(1) translateY(0); }
+
+    .modal-close {
+      position: absolute; top: 14px; right: 16px;
+      background: var(--rose-light); border: none;
+      color: var(--rose); font-size: 1rem;
+      width: 30px; height: 30px; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .modal-close:hover { background: #f5b8cc; }
+
+    /* Envelope inside modal */
+    .envelope-wrap {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 14px;
+      padding: 10px 0 6px;
+    }
+    .modal-label {
+      font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--rose); margin-bottom: 4px; text-align: center;
+    }
+
+    .envelope {
+      width: 190px; height: 126px;
+      position: relative; cursor: pointer;
+      filter: drop-shadow(0 6px 18px rgba(180,60,100,0.22));
+      transition: transform 0.2s;
+    }
+    .envelope:hover { transform: scale(1.05) translateY(-3px); }
+    .envelope:active { transform: scale(0.97); }
+
+    .env-body {
+      width: 100%; height: 100%;
+      background: linear-gradient(160deg, #f9b8cc, #f07098);
+      border-radius: 6px 6px 10px 10px;
+      position: absolute; bottom: 0;
+    }
+    .env-flap {
+      width: 0; height: 0;
+      border-left: 95px solid transparent;
+      border-right: 95px solid transparent;
+      border-top: 68px solid #e05580;
+      position: absolute; top: 0; left: 0;
+      transform-origin: top center;
+      transition: transform 0.55s cubic-bezier(.4,0,.2,1);
+      z-index: 2; backface-visibility: hidden;
+    }
+    .envelope.open .env-flap { transform: rotateX(180deg); }
+    .env-bottom {
+      width: 0; height: 0;
+      border-left: 95px solid transparent;
+      border-right: 95px solid transparent;
+      border-bottom: 64px solid #d94470;
+      position: absolute; bottom: 0; left: 0; z-index: 1;
+    }
+    .env-left {
+      width: 0; height: 0;
+      border-top: 63px solid transparent;
+      border-bottom: 63px solid transparent;
+      border-left: 95px solid #e05080;
+      position: absolute; bottom: 0; left: 0;
+    }
+    .env-right {
+      width: 0; height: 0;
+      border-top: 63px solid transparent;
+      border-bottom: 63px solid transparent;
+      border-right: 95px solid #e05080;
+      position: absolute; bottom: 0; right: 0;
+    }
+    .env-heart {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -30%);
+      font-size: 1.8rem; z-index: 3; pointer-events: none;
+      animation: heartbeat 1.8s ease-in-out infinite;
+    }
+    @keyframes heartbeat {
+      0%,100% { transform: translate(-50%,-30%) scale(1); }
+      50%      { transform: translate(-50%,-30%) scale(1.15); }
+    }
+    .tap-hint {
+      font-size: 0.82rem; color: var(--rose-dark);
+      opacity: 0.72; font-style: italic; text-align: center;
+    }
+
+    /* Message card inside modal */
+    .msg-card {
+      display: block;
+    }
+    .msg-card.visible { display: block; }
+
+    .msg-nav {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 16px;
+    }
+    .msg-nav-btn {
+      background: var(--rose-light); border: none;
+      color: var(--rose); font-size: 1.2rem;
+      width: 34px; height: 34px; border-radius: 50%;
+      cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .msg-nav-btn:hover { background: #f5b8cc; }
+    .msg-counter {
+      font-size: 0.78rem; color: #c07090;
+      font-weight: 500; letter-spacing: 0.08em;
+    }
+    .msg-text {
+      font-family: 'Satisfy', cursive;
+      font-size: 1.4rem; color: var(--rose-dark);
+      line-height: 1.55; text-align: center;
+    }
+    .msg-emoji {
+      font-size: 1.8rem; margin-top: 12px;
+      display: block; text-align: center;
+    }
+    .close-msg-btn {
+      margin-top: 14px; background: none; border: none;
+      font-size: 0.78rem; color: #c07090;
+      cursor: pointer; text-decoration: underline;
+      width: 100%; text-align: center;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--ink); color: var(--gold-light);
+      padding: 28px 24px 20px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    header::before {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(45deg, transparent, transparent 18px, rgba(201,136,42,0.06) 18px, rgba(201,136,42,0.06) 20px);
+    }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 900;
+      letter-spacing: -0.5px; position: relative; line-height: 1.1;
+    }
+    header p {
+      margin-top: 6px; font-size: 0.9rem; font-weight: 300;
+      color: var(--gold-light); opacity: 0.65; position: relative;
+    }
+
+    .progress-bar-wrap {
+      background: var(--cream); padding: 16px 24px;
+      display: flex; align-items: center; gap: 14px;
+      border-bottom: 2px solid var(--gold-light);
+    }
+    .progress-bar-bg {
+      flex: 1; height: 10px; background: #e0cdb3;
+      border-radius: 99px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), #e8aa3e);
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    }
+    .progress-label {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem; color: var(--gold); font-weight: 700; white-space: nowrap;
+    }
+
+    .filter-row {
+      display: flex; gap: 8px; padding: 14px 20px 4px; flex-wrap: wrap;
+    }
+    .filter-btn {
+      border: 2px solid var(--gold); background: transparent; color: var(--gold);
+      font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500;
+      padding: 5px 14px; border-radius: 99px; cursor: pointer;
+      transition: all 0.18s; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .filter-btn.active, .filter-btn:hover { background: var(--gold); color: #fff; }
+
+    .menu-list {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 14px 20px; max-width: 700px; margin: 0 auto;
+    }
+    .menu-item {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--card-bg); border: 2px solid #e8d9c0;
+      border-radius: 14px; padding: 14px 16px; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.2s, background 0.2s;
+      box-shadow: 0 2px 8px var(--shadow); user-select: none;
+      animation: fadeSlide 0.35s both;
+    }
+    @keyframes fadeSlide {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .menu-item:hover { transform:translateY(-2px); box-shadow:0 6px 18px var(--shadow); border-color:var(--gold-light); }
+    .menu-item.done { background:var(--done-bg); border-color:var(--done-border); }
+    .menu-item.done .item-name { text-decoration:line-through; color:var(--done-text); }
+    .menu-item.done .item-num { background:var(--done-border); color:#fff; }
+
+    .item-check {
+      width:26px; height:26px; border-radius:50%;
+      border:2.5px solid #c9b08a;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0; transition:background 0.2s, border-color 0.2s; font-size:1rem;
+    }
+    .menu-item.done .item-check { background:var(--done-border); border-color:var(--done-border); }
+    .item-num {
+      font-family:'Playfair Display', serif; font-size:0.76rem; font-weight:700;
+      background:var(--cream); color:var(--gold); border-radius:8px; padding:2px 9px;
+      flex-shrink:0; transition:background 0.2s, color 0.2s;
+    }
+    .item-name { font-size:0.95rem; font-weight:400; flex:1; line-height:1.3; transition:color 0.2s; }
+
+    .confetti-msg {
+      display:none; text-align:center;
+      font-family:'Playfair Display', serif;
+      font-size:1.4rem; color:var(--gold);
+      padding:18px 20px 0; animation:fadeSlide 0.4s both;
+    }
+    .confetti-msg.show { display:block; }
+
+    footer {
+      text-align:center; font-size:0.76rem; color:#b09a70;
+      margin-top:10px; letter-spacing:0.06em; text-transform:uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<!-- FAB FLOTANTE -->
+<button class="fab" id="fab" onclick="openModal()">💌</button>
+<div class="fab-label" id="fabLabel">Un mensaje para ti</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal-box" id="modalBox">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+
+    <div class="msg-card" id="msgCard">
+      <p class="msg-text" id="msgText"></p>
+      <span class="msg-emoji" id="msgEmoji"></span>
+    </div>
+  </div>
+</div>
+
+<!-- MENÚ -->
+<header>
+  <h1>🍽 Menú de Almuerzos</h1>
+  <p>Marca los platos que ya preparaste</p>
+</header>
+
+<div class="progress-bar-wrap">
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <span class="progress-label" id="progressLabel">0 / 17</span>
+</div>
+
+<div class="filter-row">
+  <button class="filter-btn active" onclick="setFilter('all',this)">Todos</button>
+  <button class="filter-btn" onclick="setFilter('pending',this)">Pendientes</button>
+  <button class="filter-btn" onclick="setFilter('done',this)">Listos ✓</button>
+</div>
+
+<div class="confetti-msg" id="confettiMsg">🎉 ¡Todos los almuerzos completados!</div>
+<div class="menu-list" id="menuList"></div>
+<footer>Toca un plato para marcarlo como listo</footer>
+
+<script>
+  // ── MENSAJES ──
+  const messages = [
+    { text: "Eres la mejor parte de mi día", emoji: "💕" },
+    { text: "Gracias por todo lo que haces por nuestra familia", emoji: "🌟" },
+    { text: "Eres la mejor parte de mi día", emoji: "💕" },
+    { text: "Gracias por todo lo que haces por nuestra familia", emoji: "🌟" },
+    { text: "Eres la mejor parte de mi día", emoji: "💕" },
+  ];
+
+  let currentMsg = 0;
+  let envelopeOpen = false;
+
+  // Show label briefly on load
+  setTimeout(() => {
+    const lbl = document.getElementById('fabLabel');
+    lbl.classList.add('show');
+    setTimeout(() => lbl.classList.remove('show'), 2800);
+  }, 800);
+
+  function openModal() {
+    document.getElementById('modalOverlay').classList.add('open');
+    document.getElementById('msgCard').classList.add('visible');
+    showMsg(0);
+    envelopeOpen = true;
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  function openEnvelope() {
+    if (envelopeOpen) return;
+    envelopeOpen = true;
+    document.getElementById('envelope').classList.add('open');
+    setTimeout(() => {
+      document.getElementById('envelopeWrap').style.display = 'none';
+      showMsg(0);
+      document.getElementById('msgCard').classList.add('visible');
+    }, 550);
+  }
+
+  function showMsg(idx) {
+    currentMsg = ((idx % messages.length) + messages.length) % messages.length;
+    document.getElementById('msgText').textContent = messages[currentMsg].text;
+    document.getElementById('msgEmoji').textContent = messages[currentMsg].emoji;
+    document.getElementById('msgCounter').textContent = `${currentMsg + 1} / ${messages.length}`;
+  }
+  function nextMsg() { showMsg(currentMsg + 1); }
+  function prevMsg() { showMsg(currentMsg - 1); }
+
+  // ── MENÚ ──
+  const menus = [
+    "Pasta carne molida","Sudado de carne","Carne asada con papa crema agria",
+    "Arroz con espinaca y atún","Chilaquiles",
+    "Burros de pollo con guacamole y pico de gallo y arroz",
+    "Tornillos con atún y salsa roja","Lentejas","Papas con pollo y zanahoria",
+    "Puré de papa pollo con mostaza","Carne peruana con monedas",
+    "Pasta con bechamel y pollo","Cremas con proteína y maduro",
+    "Arepa pepiada","Arroz con pollo",
+    "Arroz con carne molida y ensalada de tomate",
+    "Chicharrón con arroz y pepino"
+  ];
+
+  const STORAGE_KEY = 'lunch_menu_done_v2';
+  let done = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  let currentFilter = 'all';
+
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(done)); }
+
+  function toggle(idx) {
+    done = done.includes(idx) ? done.filter(i => i !== idx) : [...done, idx];
+    save(); render();
+  }
+
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  function render() {
+    const list = document.getElementById('menuList');
+    list.innerHTML = '';
+    const pct = Math.round((done.length / menus.length) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = `${done.length} / ${menus.length}`;
+    document.getElementById('confettiMsg').classList.toggle('show', done.length === menus.length);
+
+    menus.forEach((name, idx) => {
+      const isDone = done.includes(idx);
+      if (currentFilter === 'done' && !isDone) return;
+      if (currentFilter === 'pending' && isDone) return;
+      const el = document.createElement('div');
+      el.className = 'menu-item' + (isDone ? ' done' : '');
+      el.style.animationDelay = (idx * 0.03) + 's';
+      el.innerHTML = `
+      <div class="item-check">${isDone ? '✓' : ''}</div>
+      <span class="item-num">#${String(idx+1).padStart(2,'0')}</span>
+      <span class="item-name">${name}</span>`;
+      el.addEventListener('click', () => toggle(idx));
+      list.appendChild(el);
+    });
+  }
+
+  render();
+</script>
+</body>
+</html>
